@@ -196,6 +196,26 @@ export default function MapView({ mapRef, waypoints, segments, mode, onMapClick,
           );
         });
       })()}
+
+      {/* Straight-line dashed polylines between consecutive waypoints */}
+      {waypoints.length >= 2 &&
+        waypoints.map((wp, i) => {
+          if (i === 0) return null;
+          const prev = waypoints[i - 1];
+          return (
+            <Polyline
+              key={`straight-${i}`}
+              positions={[
+                [prev.lat, prev.lng],
+                [wp.lat, wp.lng],
+              ]}
+              color="#9ca3af"
+              weight={2}
+              dashArray="8 6"
+              opacity={0.7}
+            />
+          );
+        })}
     </MapContainer>
   );
 }
