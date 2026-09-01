@@ -5,6 +5,7 @@ import SearchBar from './components/SearchBar';
 import ControlPanel from './components/ControlPanel';
 import type { Waypoint, MapMode, SegmentDistance } from './types';
 import { computeSegments } from './utils/distance';
+import { toPersianNumber } from './utils/persian';
 import { Crosshair, Route, Compass, Trash2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
 let waypointCounter = 0;
@@ -67,7 +68,7 @@ function App() {
         id: `wp-${Date.now()}-${waypointCounter}`,
         lat,
         lng,
-        label: String.fromCharCode(1576 + waypointCounter - 1), // Persian letter labels: ب, ت, ث...
+        label: toPersianNumber(waypointCounter), // Persian digit labels: ۱, ۲, ۳...
       };
       addWaypoint(wp);
     },
@@ -115,7 +116,7 @@ function App() {
             id: `wp-${Date.now()}-${waypointCounter}`,
             lat,
             lng,
-            label: String.fromCharCode(1576 + waypointCounter - 1),
+            label: toPersianNumber(waypointCounter),
           });
         }
       }} />
