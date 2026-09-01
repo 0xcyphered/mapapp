@@ -16,6 +16,7 @@ import {
   useUserLocation,
 } from './src/hooks/useUserLocation';
 import MapCanvas, { type MapCanvasHandle } from './src/components/MapCanvas';
+import SearchBar from './src/components/SearchBar';
 
 // RTL must be set at module scope, before the app renders.
 // Note: forceRTL fully applies after an app restart — first launch may show
@@ -91,6 +92,16 @@ function AppRoot() {
     [addWaypoint]
   );
 
+  const handleSearchSelect = useCallback(
+    (lat: number, lng: number) => {
+      mapRef.current?.flyTo([lng, lat]);
+      if (mode === 'measure') {
+        addWaypoint(lat, lng);
+      }
+    },
+    [mode, addWaypoint]
+  );
+
   const handleGpsPress = useCallback(async () => {
     try {
       const loc = position ?? (await request());
@@ -113,6 +124,7 @@ function AppRoot() {
         position={position}
         onMapClick={handleMapClick}
       />
+      <SearchBar onSelect={handleSearchSelect} />
       <StatusBar style="auto" />
     </View>
   );
