@@ -15,6 +15,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Close on outside click
   useEffect(() => {
@@ -46,7 +47,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
       } finally {
         setLoading(false);
       }
-    }, 400);
+    }, 300);
   }, []);
 
   const handleSelect = (result: SearchResult) => {
@@ -55,6 +56,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
     onSelect(lat, lng);
     setQuery(result.display_name);
     setOpen(false);
+    inputRef.current?.blur();
   };
 
   return (
@@ -68,6 +70,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
               <Search size={20} className="text-gray-400 shrink-0" />
             )}
             <input
+              ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
