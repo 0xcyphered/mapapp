@@ -20,7 +20,6 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import type { MapMode, SegmentDistance, Waypoint } from '../types';
 import type { UserPosition } from '../hooks/useUserLocation';
 import { COLORS, TEHRAN } from '../theme';
-import { Vazirmatn_700Bold } from '@expo-google-fonts/vazirmatn';
 
 export type MapCanvasHandle = {
   flyTo: (lngLat: [number, number], zoom?: number) => void;
@@ -314,5 +313,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
   },
 });
+
+MapCanvas.displayName = 'MapCanvas';
 
 export default MapCanvas;

@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Vazirmatn_400Regular, Vazirmatn_500Medium } from '@expo-google-fonts/vazirmatn';
 
 import { searchPlaces } from '../utils/geocoding';
 import { toPersianDigits } from '../utils/persian';
