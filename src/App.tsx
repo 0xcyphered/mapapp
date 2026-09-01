@@ -4,9 +4,9 @@ import MapView from './components/MapView';
 import SearchBar from './components/SearchBar';
 import ControlPanel from './components/ControlPanel';
 import type { Waypoint, MapMode, SegmentDistance } from './types';
-import { computeSegments } from './utils/distance';
-import { toPersianNumber } from './utils/persian';
-import { Crosshair, Route, Compass, Trash2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { computeSegments, totalRoutedDistance, totalStraightDistance } from './utils/distance';
+import { toPersianNumber, formatDistance } from './utils/persian';
+import { Crosshair, Route, Compass, Trash2, ChevronLeft, ChevronRight, AlertCircle, Ruler } from 'lucide-react';
 
 let waypointCounter = 0;
 
@@ -179,6 +179,28 @@ function App() {
         >
           <Trash2 size={22} className="text-red-500" />
         </button>
+      )}
+
+      {/* Floating distance summary card */}
+      {waypoints.length >= 2 && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200 px-5 py-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
+            <Ruler size={18} className="text-white" />
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-400 leading-tight">مجموع مسافت</div>
+            <div className="text-sm font-bold text-gray-800 leading-tight">
+              {formatDistance(totalRoutedDistance(segments))}
+            </div>
+          </div>
+          <div className="w-px h-8 bg-gray-200 mx-1" />
+          <div>
+            <div className="text-[10px] text-gray-400 leading-tight">خط مستقیم</div>
+            <div className="text-sm font-bold text-gray-600 leading-tight">
+              {formatDistance(totalStraightDistance(segments))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Sidebar Toggle */}
