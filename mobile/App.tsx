@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import type { MapMode, SegmentDistance, Waypoint } from './src/types';
@@ -328,7 +328,11 @@ export default function App() {
     return null;
   }
 
-  return <AppRoot />;
+  return (
+    <SafeAreaProvider>
+      <AppRoot />
+    </SafeAreaProvider>
+  );
 }
 
 const styles = StyleSheet.create({
