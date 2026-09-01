@@ -6,7 +6,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/vazirmatn';
 import { StyleSheet, Text, I18nManager, View } from 'react-native';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { MapMode, SegmentDistance, Waypoint } from './src/types';
 import { computeSegments } from './src/utils/distance';
@@ -15,6 +15,7 @@ import {
   LOCATION_UNAVAILABLE_MESSAGE,
   useUserLocation,
 } from './src/hooks/useUserLocation';
+import MapCanvas, { type MapCanvasHandle } from './src/components/MapCanvas';
 
 // RTL must be set at module scope, before the app renders.
 // Note: forceRTL fully applies after an app restart — first launch may show
@@ -81,11 +82,20 @@ function AppRoot() {
     setSegments([]);
   }, []);
 
+  const mapRef = useRef<MapCanvasHandle | null>(null);
+
+  const handleMapClick = useCallback(
+    (lat: number, lng: number) => {
+      addWaypoint(lat, lng);
+    },
+    [addWaypoint]
+  );
+
   const handleGpsPress = useCallback(async () => {
     try {
       const loc = position ?? (await request());
       // Fly to the GPS result — it never enters `waypoints`.
-      void loc;
+      mapRef.current?.flyTo([loc.lng, loc.lat]);
     } catch (e) {
       setLocationError(
         e instanceof Error ? e.message : LOCATION_UNAVAILABLE_MESSAGE
@@ -95,7 +105,14 @@ function AppRoot() {
 
   return (
     <View style={styles.container}>
-      <Text>Iran Map</Text>
+      <MapCanvas
+        ref={mapRef}
+        waypoints={waypoints}
+        segments={segments}
+        mode={mode}
+        position={position}
+        onMapClick={handleMapClick}
+      />
       <StatusBar style="auto" />
     </View>
   );
