@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import React from 'react';
 import L from 'leaflet';
-import { MapContainer, TileLayer, useMap, useMapEvents, Marker, Popup, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, useMapEvents, Marker, Popup, Polyline, Circle } from 'react-leaflet';
 import type { Waypoint, SegmentDistance, MapMode } from '../types';
 import { reverseGeocode } from '../utils/geocoding';
 import { formatCoordinate } from '../utils/persian';
@@ -22,7 +22,9 @@ interface MapViewProps {
   segments: SegmentDistance[];
   mode: MapMode;
   onMapClick: (lat: number, lng: number) => void;
-  onUserLocation: (loc: { lat: number; lng: number }) => void;
+  onUserLocation: (loc: { lat: number; lng: number; accuracy: number }) => void;
+  onLocationError: (message: string) => void;
+  userLocation: { lat: number; lng: number; accuracy: number } | null;
 }
 
 /** Creates a waypoint icon with label */
@@ -46,7 +48,17 @@ function createUserLocationIcon() {
 }
 
 /** Inner component to access the map instance */
-function MapEvents({ onMapClick, onUserLocation, mode }: { onMapClick: (lat: number, lng: number) => void; onUserLocation: (loc: { lat: number; lng: number }) => void; mode: MapMode }) {
+function MapEvents({
+  onMapClick,
+  onUserLocation,
+  onLocationError,
+  mode,
+}: {
+  onMapClick: (lat: number, lng: number) => void;
+  onUserLocation: (loc: { lat: number; lng: number; accuracy: number }) => void;
+  onLocationError: (message: string) => void;
+  mode: MapMode;
+}) {
   const map = useMap();
 
   useMapEvents({
@@ -54,8 +66,15 @@ function MapEvents({ onMapClick, onUserLocation, mode }: { onMapClick: (lat: num
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
     locationfound(e) {
-      onUserLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
+      onUserLocation({
+        lat: e.latlng.lat,
+        lng: e.latlng.lng,
+        accuracy: e.accuracy,
+      });
       map.flyTo(e.latlng, 15, { duration: 1.5 });
+    },
+    locationerror() {
+      onLocationError('خدمات موقعیت‌یابی در دسترس نیست. لطفاً دسترسی GPS را بررسی کنید.');
     },
   });
 
@@ -119,7 +138,7 @@ function GeocodedMarker({ waypoint, onRemove }: { waypoint: Waypoint; onRemove: 
   );
 }
 
-export default function MapView({ mapRef, waypoints, segments, mode, onMapClick, onUserLocation }: MapViewProps) {
+export default function MapView({ mapRef, waypoints, segments, mode, onMapClick, onUserLocation, onLocationError, userLocation }: MapViewProps) {
   return (
     <MapContainer
       center={TEHRAN_CENTER}
@@ -135,7 +154,22 @@ export default function MapView({ mapRef, waypoints, segments, mode, onMapClick,
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <MapEvents onMapClick={onMapClick} onUserLocation={onUserLocation} mode={mode} />
+      <MapEvents onMapClick={onMapClick} onUserLocation={onUserLocation} onLocationError={onLocationError} mode={mode} />
+
+      {/* User location marker + accuracy circle */}
+      {userLocation && (
+        <Marker
+          position={[userLocation.lat, userLocation.lng]}
+          icon={createUserLocationIcon()}
+        />
+      )}
+      {userLocation && userLocation.accuracy > 0 && (
+        <Circle
+          center={[userLocation.lat, userLocation.lng]}
+          radius={userLocation.accuracy}
+          pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.08, weight: 1 }}
+        />
+      )}
 
       {/* Waypoint markers */}
       {waypoints.map((wp) => (

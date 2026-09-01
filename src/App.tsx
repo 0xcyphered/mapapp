@@ -1,11 +1,11 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import MapView from './components/MapView';
 import SearchBar from './components/SearchBar';
 import ControlPanel from './components/ControlPanel';
 import type { Waypoint, MapMode, SegmentDistance } from './types';
 import { computeSegments } from './utils/distance';
-import { Crosshair, Route, Compass, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Crosshair, Route, Compass, Trash2, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 
 let waypointCounter = 0;
 
@@ -14,7 +14,12 @@ function App() {
   const [segments, setSegments] = useState<SegmentDistance[]>([]);
   const [mode, setMode] = useState<MapMode>('explore');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+    accuracy: number;
+  } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
 
   const recalcSegments = useCallback(async (wps: Waypoint[]) => {
@@ -73,6 +78,20 @@ function App() {
     mapRef.current?.flyTo([lat, lng], zoom, { duration: 1.5 });
   }, []);
 
+  const handleUserLocation = useCallback(
+    (loc: { lat: number; lng: number; accuracy: number }) => {
+      setUserLocation(loc);
+      setLocationError(null);
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!locationError) return;
+    const t = setTimeout(() => setLocationError(null), 4000);
+    return () => clearTimeout(t);
+  }, [locationError]);
+
   return (
     <div className="relative w-full h-screen overflow-hidden" dir="rtl">
       {/* Map */}
@@ -82,7 +101,9 @@ function App() {
         segments={segments}
         mode={mode}
         onMapClick={handleMapClick}
-        onUserLocation={setUserLocation}
+        onUserLocation={handleUserLocation}
+        onLocationError={setLocationError}
+        userLocation={userLocation}
       />
 
       {/* Search Bar */}
@@ -124,6 +145,14 @@ function App() {
           <span>اندازه‌گیری مسیر</span>
         </button>
       </div>
+
+      {/* Location error toast */}
+      {locationError && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] bg-red-500/90 text-white px-5 py-3 rounded-xl text-sm font-medium backdrop-blur-sm flex items-center gap-2">
+          <AlertCircle size={16} />
+          {locationError}
+        </div>
+      )}
 
       {/* Location FAB */}
       <button
