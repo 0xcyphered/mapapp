@@ -28,7 +28,7 @@ function createApp() {
 
     res.status(healthy ? 200 : 503).json({
       status: healthy ? 'ok' : 'degraded',
-      service: 'amintajeran-api',
+      service: 'baryar-api',
       version: pkg.version,
       checks: { mongo },
     });

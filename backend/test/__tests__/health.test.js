@@ -9,7 +9,7 @@ describe('GET /health', () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
-    expect(res.body.service).toBe('amintajeran-api');
+    expect(res.body.service).toBe('baryar-api');
     expect(res.body.checks.mongo).toBe('ok');
   });
 

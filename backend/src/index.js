@@ -9,7 +9,7 @@ async function main() {
   const app = createApp();
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
-    console.log(`amintajeran-api listening on ${PORT}`);
+    console.log(`baryar-api listening on ${PORT}`);
   });
 }
 

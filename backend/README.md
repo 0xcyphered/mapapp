@@ -1,6 +1,6 @@
-# amintajeran-api
+# baryar-api
 
-Express + MongoDB API for the AminTajeran transportation platform.
+Express + MongoDB API for the baryar transportation platform.
 
 ## Run
 
