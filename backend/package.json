@@ -1,8 +1,8 @@
 {
-  "name": "amintajeran-api",
+  "name": "baryar-api",
   "version": "0.1.0",
   "private": true,
-  "description": "AminTajeran transportation platform API",
+  "description": "Baryar cargo logistics platform API",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

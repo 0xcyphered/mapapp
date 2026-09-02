@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Iran Map",
-    "slug": "iran-map",
+    "name": "Baryar",
+    "slug": "baryar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "iranmap",
+    "scheme": "baryar",
     "userInterfaceStyle": "light",
     "plugins": [
       "@maplibre/maplibre-react-native"
@@ -15,7 +15,7 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "برای نمایش موقعیت شما روی نقشه و محاسبه فاصله‌ها به دسترسی مکان نیاز است."
       },
-      "bundleIdentifier": "com.anonymous.iranmap"
+      "bundleIdentifier": "com.taticom.baryar"
     },
     "android": {
       "permissions": [
@@ -29,7 +29,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.iranmap"
+      "package": "com.taticom.baryar"
     },
     "web": {
       "favicon": "./assets/favicon.png"
