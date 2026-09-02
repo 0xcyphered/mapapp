@@ -6,19 +6,17 @@ import {
   useFonts,
 } from '@expo-google-fonts/vazirmatn';
 import {
-  Animated,
-  BackHandler,
-  FlatList,
   I18nManager,
-  PanResponder,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import type BottomSheet from '@gorhom/bottom-sheet';
 import { hapticLight, hapticMedium, hapticWarning } from './src/utils/haptics';
 
 import type { MapMode, SegmentDistance, Waypoint } from './src/types';
@@ -27,13 +25,14 @@ import {
   totalRoutedDistance,
   totalStraightDistance,
 } from './src/utils/distance';
-import { formatCoordinate, formatDistance, toPersianNumber } from './src/utils/persian';
+import { formatDistance, toPersianNumber } from './src/utils/persian';
 import {
   LOCATION_UNAVAILABLE_MESSAGE,
   useUserLocation,
 } from './src/hooks/useUserLocation';
 import MapCanvas, { type MapCanvasHandle } from './src/components/MapCanvas';
 import SearchBar from './src/components/SearchBar';
+import WaypointsSheet from './src/components/WaypointsSheet';
 import { COLORS } from './src/theme';
 
 // RTL must be set at module scope, before the app renders.
@@ -49,53 +48,15 @@ function AppRoot() {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [segments, setSegments] = useState<SegmentDistance[]>([]);
   const [mode, setMode] = useState<MapMode>('explore');
-  const [panelOpen, setPanelOpen] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const { position, request } = useUserLocation();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapCanvasHandle | null>(null);
-  const panelAnim = useRef(new Animated.Value(0)).current;
+  const sheetRef = useRef<BottomSheet | null>(null);
 
-  const panelWidth = 300;
-  const panelResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only capture horizontal drags, not vertical scrolls
-        return (
-          Math.abs(gestureState.dx) > 10 &&
-          Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
-        );
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // Panel starts at 0 when open, should slide to -panelWidth when closed.
-        // Swipe left (negative dx) = dismiss.
-        const dx = gestureState.dx;
-        const newTranslate = Math.max(-panelWidth, Math.min(0, dx));
-        panelAnim.setValue(newTranslate / panelWidth + 1); // map [-panelWidth, 0] to [0, 1]
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        // If dragged more than 40% of panel width, close; otherwise snap back open
-        if (gestureState.dx < -panelWidth * 0.4) {
-          setPanelOpen(false);
-        } else {
-          setPanelOpen(true);
-        }
-      },
-    }),
-  ).current;
-
-  // Vertical stacking: search bar is ~56px tall (padding 12+12 + input ~32) plus
-  // top: insets.top + 8. Mode toggle sits just below it.
-  const SEARCH_BOTTOM = insets.top + 68; // 8 (top offset) + ~60 (card height with border)
-  const TOGGLE_TOP = SEARCH_BOTTOM + 8;
-  const TOAST_TOP = TOGGLE_TOP + 48; // below the mode toggle pills
-  const TOGGLE_TOGGLE_TOP = TOGGLE_TOP + 48; // below mode toggle pills
-
-  // Bottom stacking: FABs are the anchor at insets.bottom + 24.
-  // Summary card and measure hint float above them with a gap.
+  // Google Maps layout: search bar at top, FABs on right side, bottom sheet at bottom.
   const FABS_BOTTOM = insets.bottom + 24;
-  const CARD_BOTTOM = FABS_BOTTOM + 72; // 48 (FAB height) + 24 (gap)
+  const FABS_RIGHT = 16;
 
   // Toast auto-dismiss (4s), same as the web app.
   useEffect(() => {
@@ -104,23 +65,12 @@ function AppRoot() {
     return () => clearTimeout(timer);
   }, [locationError]);
 
+  // Auto-expand bottom sheet when waypoints are added
   useEffect(() => {
-    Animated.timing(panelAnim, {
-      toValue: panelOpen ? 1 : 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  }, [panelOpen, panelAnim]);
-
-  // Android back button: dismiss panel if open
-  useEffect(() => {
-    if (!panelOpen) return;
-    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
-      setPanelOpen(false);
-      return true; // consumed
-    });
-    return () => handler.remove();
-  }, [panelOpen]);
+    if (waypoints.length > 0) {
+      sheetRef.current?.snapToIndex(1); // snap to 45%
+    }
+  }, [waypoints.length]);
 
   const recalcSegments = useCallback(async (wps: Waypoint[]) => {
     if (wps.length < 2) {
@@ -211,6 +161,7 @@ function AppRoot() {
 
   return (
     <View style={styles.container}>
+      {/* 1. Map (fills entire screen) */}
       <MapCanvas
         ref={mapRef}
         waypoints={waypoints}
@@ -221,86 +172,49 @@ function AppRoot() {
         onWaypointPress={handleWaypointPress}
       />
 
-      {/* Search overlay */}
+      {/* 2. Search bar — Google Maps style, floating at top */}
       <SearchBar onSelect={handleSearchSelect} />
 
-      {/* Mode toggle */}
-      <View style={[styles.modeToggle, { top: TOGGLE_TOP }]}>
+      {/* 3. Mode chips — centered below search bar, Google Maps style */}
+      <View style={[styles.modeChips, { top: insets.top + 68 }]}>
         <Pressable
-          style={[styles.modeButton, mode === 'explore' && styles.modeActive]}
+          style={[styles.chip, mode === 'explore' && styles.chipActive]}
           onPress={() => { hapticLight(); setMode('explore'); }}
         >
-          <Text
-            style={[
-              styles.modeText,
-              mode === 'explore' && styles.modeTextActive,
-            ]}
-          >
-            کاوش نقشه
+          <Ionicons
+            name="compass-outline"
+            size={16}
+            color={mode === 'explore' ? COLORS.white : COLORS.textMid}
+          />
+          <Text style={[styles.chipText, mode === 'explore' && styles.chipTextActive]}>
+            کاوش
           </Text>
         </Pressable>
         <Pressable
-          style={[styles.modeButton, mode === 'measure' && styles.modeActive]}
+          style={[styles.chip, mode === 'measure' && styles.chipActive]}
           onPress={() => { hapticLight(); setMode('measure'); }}
         >
-          <Text
-            style={[
-              styles.modeText,
-              mode === 'measure' && styles.modeTextActive,
-            ]}
-          >
-            اندازه‌گیری مسیر
+          <Ionicons
+            name="analytics-outline"
+            size={16}
+            color={mode === 'measure' ? COLORS.white : COLORS.textMid}
+          />
+          <Text style={[styles.chipText, mode === 'measure' && styles.chipTextActive]}>
+            اندازه‌گیری
           </Text>
         </Pressable>
       </View>
 
-      {/* GPS toast */}
+      {/* 4. GPS error toast */}
       {locationError ? (
-        <View style={[styles.toast, { top: TOAST_TOP }]}>
+        <View style={[styles.toast, { top: insets.top + 110 }]}>
           <Ionicons name="warning" size={16} color={COLORS.white} />
           <Text style={styles.toastText}>{locationError}</Text>
         </View>
       ) : null}
 
-      {/* Summary card */}
-      {waypoints.length >= 2 ? (
-        <View style={[styles.summaryCard, { bottom: CARD_BOTTOM }]}>
-          <View style={styles.summaryRow}>
-            <View style={styles.summarySquare} />
-            <Text style={styles.summaryLabel}>مجموع مسافت</Text>
-            <Text style={styles.summaryValue}>
-              {formatDistance(totalRoutedDistance(segments))}
-            </Text>
-          </View>
-          <View style={styles.summaryDivider} />
-          <View style={styles.summaryRow}>
-            <View
-              style={[styles.summarySquare, { backgroundColor: COLORS.gray }]}
-            />
-            <Text style={styles.summaryLabel}>خط مستقیم</Text>
-            <Text style={styles.summaryValue}>
-              {formatDistance(totalStraightDistance(segments))}
-            </Text>
-          </View>
-        </View>
-      ) : null}
-
-      {/* Measure hint */}
-      {mode === 'measure' && waypoints.length === 0 ? (
-        <View style={[styles.measureHint, { bottom: CARD_BOTTOM }]}>
-          <Text style={styles.measureHintText}>
-            روی نقشه کلیک کنید • روی نقطه بزنید تا حذف شود
-          </Text>
-        </View>
-      ) : null}
-
-      {/* FABs */}
-      <View style={[styles.fabs, { bottom: insets.bottom + 24 }]}>
-        {mode === 'measure' && waypoints.length > 0 ? (
-          <Pressable style={styles.fab} onPress={() => { hapticMedium(); undoWaypoint(); }}>
-            <Ionicons name="arrow-undo" size={20} color={COLORS.textMid} />
-          </Pressable>
-        ) : null}
+      {/* 5. FABs — right side, Google Maps position */}
+      <View style={[styles.fabs, { bottom: FABS_BOTTOM, right: FABS_RIGHT }]}>
         {waypoints.length > 0 ? (
           <Pressable style={styles.fab} onPress={() => { hapticMedium(); clearWaypoints(); }}>
             <Ionicons name="trash" size={22} color={COLORS.red} />
@@ -314,91 +228,15 @@ function AppRoot() {
         </Pressable>
       </View>
 
-      {/* Panel backdrop — tap to dismiss */}
-      {panelOpen ? (
-        <Pressable
-          style={styles.panelBackdrop}
-          onPress={() => setPanelOpen(false)}
-        />
-      ) : null}
-
-      {/* Control panel (slides from the left edge) */}
-      <Animated.View
-        {...panelResponder.panHandlers}
-        style={[
-          styles.panel,
-          {
-            transform: [
-              {
-                translateX: panelAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-panelWidth, 0],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <View style={[styles.panelHeader, { paddingTop: insets.top + 16 }]}>
-          <Text style={styles.panelTitle}>پنل کنترل</Text>
-        </View>
-        <FlatList
-          data={waypoints}
-          keyExtractor={(item) => item.id}
-          style={styles.panelList}
-          renderItem={({ item }) => (
-            <View style={styles.panelRow}>
-              <View style={styles.panelRowBody}>
-                <Text style={styles.panelRowTitle}>نقطه {item.label}</Text>
-                <Text style={styles.panelRowCoords}>
-                  {formatCoordinate(item.lat, item.lng)}
-                </Text>
-              </View>
-              <Pressable
-                hitSlop={8}
-                onPress={() => { hapticLight(); removeWaypoint(item.id); }}
-                style={styles.panelRemove}
-              >
-                <Ionicons name="close" size={18} color={COLORS.textMid} />
-              </Pressable>
-            </View>
-          )}
-          ListEmptyComponent={
-            <Text style={styles.panelEmpty}>نقطه‌ای ثبت نشده است</Text>
-          }
-        />
-        <View style={styles.panelFooter}>
-          <View style={styles.panelTotalsRow}>
-            <Text style={styles.panelTotalsLabel}>مجموع مسافت</Text>
-            <Text style={styles.panelTotalsValue}>
-              {formatDistance(totalRoutedDistance(segments))}
-            </Text>
-          </View>
-          <View style={styles.panelTotalsRow}>
-            <Text style={styles.panelTotalsLabel}>خط مستقیم</Text>
-            <Text style={styles.panelTotalsValue}>
-              {formatDistance(totalStraightDistance(segments))}
-            </Text>
-          </View>
-          {waypoints.length > 0 ? (
-            <Pressable style={styles.panelClear} onPress={() => { hapticWarning(); clearWaypoints(); }}>
-              <Text style={styles.panelClearText}>پاک کردن همه</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </Animated.View>
-
-      {/* Panel chevron toggle (starts closed) */}
-      <Pressable
-        style={[styles.panelToggle, { top: TOGGLE_TOGGLE_TOP }]}
-        onPress={() => { hapticLight(); setPanelOpen((v) => !v); }}
-      >
-        <Ionicons
-          name={panelOpen ? 'chevron-back' : 'chevron-forward'}
-          size={18}
-          color={COLORS.textDark}
-        />
-      </Pressable>
+      {/* 6. Waypoints bottom sheet (replaces the entire sidebar) */}
+      <WaypointsSheet
+        ref={sheetRef}
+        waypoints={waypoints}
+        segments={segments}
+        onRemove={removeWaypoint}
+        onClear={clearWaypoints}
+        onUndo={undoWaypoint}
+      />
 
       <StatusBar style="auto" />
     </View>
@@ -418,9 +256,11 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <AppRoot />
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <AppRoot />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -429,35 +269,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bg,
   },
-  modeToggle: {
+
+  // --- Mode chips (Google Maps style, below search bar) ---
+  modeChips: {
     position: 'absolute',
     left: 0,
     right: 0,
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
     zIndex: 900,
   },
-  modeButton: {
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: COLORS.white,
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    minHeight: 40, // ensures adequate touch target
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    minHeight: 36,
   },
-  modeActive: {
+  chipActive: {
     backgroundColor: COLORS.blue,
-    borderColor: COLORS.blue,
   },
-  modeText: {
+  chipText: {
     color: COLORS.textMid,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Vazirmatn_500Medium',
   },
-  modeTextActive: {
+  chipTextActive: {
     color: COLORS.white,
   },
+
+  // --- Toast ---
   toast: {
     position: 'absolute',
     left: 16,
@@ -477,70 +327,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Vazirmatn_400Regular',
   },
-  summaryCard: {
-    position: 'absolute',
-    alignSelf: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 5,
-    zIndex: 800,
-    minWidth: 220,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  summarySquare: {
-    width: 12,
-    height: 12,
-    borderRadius: 3,
-    backgroundColor: COLORS.blue,
-    marginRight: 8,
-  },
-  summaryLabel: {
-    fontSize: 13,
-    color: COLORS.textMid,
-    flex: 1,
-    textAlign: 'right',
-    fontFamily: 'Vazirmatn_400Regular',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: COLORS.textDark,
-    fontFamily: 'Vazirmatn_700Bold',
-  },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 4,
-  },
-  measureHint: {
-    position: 'absolute',
-    alignSelf: 'center',
-    backgroundColor: 'rgba(31, 41, 55, 0.85)',
-    borderRadius: 999,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    zIndex: 800,
-  },
-  measureHintText: {
-    color: COLORS.white,
-    fontSize: 13,
-    fontFamily: 'Vazirmatn_400Regular',
-  },
+
+  // --- FABs (right side, Google Maps position) ---
   fabs: {
     position: 'absolute',
-    left: 16,
-    zIndex: 900,
     gap: 12,
+    zIndex: 900,
   },
   fab: {
     width: 48,
@@ -554,126 +346,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 4,
-  },
-  panel: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    width: 300,
-    backgroundColor: COLORS.white,
-    zIndex: 1200,
-    elevation: 8,
-  },
-  panelBackdrop: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    zIndex: 1199, // just below the panel (1200)
-  },
-  panelHeader: {
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  panelTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: COLORS.textDark,
-    fontFamily: 'Vazirmatn_700Bold',
-  },
-  panelList: {
-    flex: 1,
-  },
-  panelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  panelRowBody: {
-    flex: 1,
-  },
-  panelRowTitle: {
-    fontSize: 14,
-    color: COLORS.textDark,
-    textAlign: 'right',
-    fontFamily: 'Vazirmatn_500Medium',
-  },
-  panelRowCoords: {
-    fontSize: 12,
-    color: COLORS.textMid,
-    textAlign: 'right',
-    marginTop: 2,
-    fontFamily: 'Vazirmatn_400Regular',
-  },
-  panelRemove: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  panelEmpty: {
-    padding: 16,
-    color: COLORS.textMid,
-    fontSize: 13,
-    textAlign: 'center',
-    fontFamily: 'Vazirmatn_400Regular',
-  },
-  panelFooter: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  panelTotalsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  panelTotalsLabel: {
-    fontSize: 13,
-    color: COLORS.textMid,
-    fontFamily: 'Vazirmatn_400Regular',
-  },
-  panelTotalsValue: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: COLORS.textDark,
-    fontFamily: 'Vazirmatn_700Bold',
-  },
-  panelClear: {
-    marginTop: 10,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-    borderRadius: 8,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  panelClearText: {
-    color: COLORS.red,
-    fontSize: 13,
-    fontFamily: 'Vazirmatn_500Medium',
-  },
-  panelToggle: {
-    position: 'absolute',
-    left: 0,
-    width: 28,
-    height: 44,
-    backgroundColor: COLORS.white,
-    borderTopRightRadius: 8,
-    borderBottomRightRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 1, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1100,
   },
 });
