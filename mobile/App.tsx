@@ -53,6 +53,18 @@ function AppRoot() {
   const mapRef = useRef<MapCanvasHandle | null>(null);
   const panelAnim = useRef(new Animated.Value(0)).current;
 
+  // Vertical stacking: search bar is ~56px tall (padding 12+12 + input ~32) plus
+  // top: insets.top + 8. Mode toggle sits just below it.
+  const SEARCH_BOTTOM = insets.top + 68; // 8 (top offset) + ~60 (card height with border)
+  const TOGGLE_TOP = SEARCH_BOTTOM + 8;
+  const TOAST_TOP = TOGGLE_TOP + 48; // below the mode toggle pills
+  const TOGGLE_TOGGLE_TOP = TOGGLE_TOP + 48; // below mode toggle pills
+
+  // Bottom stacking: FABs are the anchor at insets.bottom + 24.
+  // Summary card and measure hint float above them with a gap.
+  const FABS_BOTTOM = insets.bottom + 24;
+  const CARD_BOTTOM = FABS_BOTTOM + 72; // 48 (FAB height) + 24 (gap)
+
   // Toast auto-dismiss (4s), same as the web app.
   useEffect(() => {
     if (!locationError) return;
@@ -153,7 +165,7 @@ function AppRoot() {
       <SearchBar onSelect={handleSearchSelect} />
 
       {/* Mode toggle */}
-      <View style={[styles.modeToggle, { top: insets.top + 76 }]}>
+      <View style={[styles.modeToggle, { top: TOGGLE_TOP }]}>
         <Pressable
           style={[styles.modeButton, mode === 'explore' && styles.modeActive]}
           onPress={() => setMode('explore')}
@@ -184,7 +196,7 @@ function AppRoot() {
 
       {/* GPS toast */}
       {locationError ? (
-        <View style={[styles.toast, { top: insets.top + 128 }]}>
+        <View style={[styles.toast, { top: TOAST_TOP }]}>
           <Ionicons name="warning" size={16} color={COLORS.white} />
           <Text style={styles.toastText}>{locationError}</Text>
         </View>
@@ -192,7 +204,7 @@ function AppRoot() {
 
       {/* Summary card */}
       {waypoints.length >= 2 ? (
-        <View style={[styles.summaryCard, { bottom: insets.bottom + 96 }]}>
+        <View style={[styles.summaryCard, { bottom: CARD_BOTTOM }]}>
           <View style={styles.summaryRow}>
             <View style={styles.summarySquare} />
             <Text style={styles.summaryLabel}>مجموع مسافت</Text>
@@ -215,7 +227,7 @@ function AppRoot() {
 
       {/* Measure hint */}
       {mode === 'measure' && waypoints.length === 0 ? (
-        <View style={[styles.measureHint, { bottom: insets.bottom + 96 }]}>
+        <View style={[styles.measureHint, { bottom: CARD_BOTTOM }]}>
           <Text style={styles.measureHintText}>
             روی نقشه کلیک کنید تا نقطه اضافه شود
           </Text>
@@ -250,7 +262,7 @@ function AppRoot() {
           },
         ]}
       >
-        <View style={styles.panelHeader}>
+        <View style={[styles.panelHeader, { paddingTop: insets.top + 16 }]}>
           <Text style={styles.panelTitle}>پنل کنترل</Text>
         </View>
         <FlatList
@@ -301,7 +313,7 @@ function AppRoot() {
 
       {/* Panel chevron toggle (starts closed) */}
       <Pressable
-        style={[styles.panelToggle, { top: insets.top + 200 }]}
+        style={[styles.panelToggle, { top: TOGGLE_TOGGLE_TOP }]}
         onPress={() => setPanelOpen((v) => !v)}
       >
         <Ionicons
@@ -350,11 +362,12 @@ const styles = StyleSheet.create({
   modeButton: {
     backgroundColor: COLORS.white,
     borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+    minHeight: 40, // ensures adequate touch target
   },
   modeActive: {
     backgroundColor: COLORS.blue,
@@ -362,7 +375,7 @@ const styles = StyleSheet.create({
   },
   modeText: {
     color: COLORS.textMid,
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: 'Vazirmatn_500Medium',
   },
   modeTextActive: {
@@ -476,7 +489,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   panelHeader: {
-    paddingTop: 56,
     paddingBottom: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
