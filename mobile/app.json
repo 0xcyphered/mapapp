@@ -7,7 +7,9 @@
     "icon": "./assets/icon.png",
     "scheme": "iranmap",
     "userInterfaceStyle": "light",
-    "plugins": ["@maplibre/maplibre-react-native"],
+    "plugins": [
+      "@maplibre/maplibre-react-native"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -15,14 +17,18 @@
       }
     },
     "android": {
-      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.iranmap"
     },
     "web": {
       "favicon": "./assets/favicon.png"
