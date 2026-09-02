@@ -14,7 +14,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "برای نمایش موقعیت شما روی نقشه و محاسبه فاصله‌ها به دسترسی مکان نیاز است."
-      }
+      },
+      "bundleIdentifier": "com.anonymous.iranmap"
     },
     "android": {
       "permissions": [
