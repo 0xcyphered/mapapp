@@ -19,6 +19,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { hapticLight, hapticMedium, hapticWarning } from './src/utils/haptics';
 
 import type { MapMode, SegmentDistance, Waypoint } from './src/types';
 import {
@@ -227,7 +228,7 @@ function AppRoot() {
       <View style={[styles.modeToggle, { top: TOGGLE_TOP }]}>
         <Pressable
           style={[styles.modeButton, mode === 'explore' && styles.modeActive]}
-          onPress={() => setMode('explore')}
+          onPress={() => { hapticLight(); setMode('explore'); }}
         >
           <Text
             style={[
@@ -240,7 +241,7 @@ function AppRoot() {
         </Pressable>
         <Pressable
           style={[styles.modeButton, mode === 'measure' && styles.modeActive]}
-          onPress={() => setMode('measure')}
+          onPress={() => { hapticLight(); setMode('measure'); }}
         >
           <Text
             style={[
@@ -296,19 +297,19 @@ function AppRoot() {
       {/* FABs */}
       <View style={[styles.fabs, { bottom: insets.bottom + 24 }]}>
         {mode === 'measure' && waypoints.length > 0 ? (
-          <Pressable style={styles.fab} onPress={undoWaypoint}>
+          <Pressable style={styles.fab} onPress={() => { hapticMedium(); undoWaypoint(); }}>
             <Ionicons name="arrow-undo" size={20} color={COLORS.textMid} />
           </Pressable>
         ) : null}
         {waypoints.length > 0 ? (
-          <Pressable style={styles.fab} onPress={clearWaypoints}>
+          <Pressable style={styles.fab} onPress={() => { hapticMedium(); clearWaypoints(); }}>
             <Ionicons name="trash" size={22} color={COLORS.red} />
           </Pressable>
         ) : null}
-        <Pressable style={styles.fab} onPress={handleCompassPress}>
+        <Pressable style={styles.fab} onPress={() => { hapticLight(); handleCompassPress(); }}>
           <Ionicons name="compass" size={22} color={COLORS.textDark} />
         </Pressable>
-        <Pressable style={styles.fab} onPress={handleGpsPress}>
+        <Pressable style={styles.fab} onPress={() => { hapticLight(); void handleGpsPress(); }}>
           <Ionicons name="navigate" size={22} color={COLORS.blue} />
         </Pressable>
       </View>
@@ -355,7 +356,7 @@ function AppRoot() {
               </View>
               <Pressable
                 hitSlop={8}
-                onPress={() => removeWaypoint(item.id)}
+                onPress={() => { hapticLight(); removeWaypoint(item.id); }}
                 style={styles.panelRemove}
               >
                 <Ionicons name="close" size={18} color={COLORS.textMid} />
@@ -380,7 +381,7 @@ function AppRoot() {
             </Text>
           </View>
           {waypoints.length > 0 ? (
-            <Pressable style={styles.panelClear} onPress={clearWaypoints}>
+            <Pressable style={styles.panelClear} onPress={() => { hapticWarning(); clearWaypoints(); }}>
               <Text style={styles.panelClearText}>پاک کردن همه</Text>
             </Pressable>
           ) : null}
@@ -390,7 +391,7 @@ function AppRoot() {
       {/* Panel chevron toggle (starts closed) */}
       <Pressable
         style={[styles.panelToggle, { top: TOGGLE_TOGGLE_TOP }]}
-        onPress={() => setPanelOpen((v) => !v)}
+        onPress={() => { hapticLight(); setPanelOpen((v) => !v); }}
       >
         <Ionicons
           name={panelOpen ? 'chevron-back' : 'chevron-forward'}

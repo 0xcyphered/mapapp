@@ -11,6 +11,7 @@
     "expo": "~57.0.18",
     "expo-dev-client": "~57.0.16",
     "expo-font": "~57.0.2",
+    "expo-haptics": "~57.0.2",
     "expo-location": "~57.0.14",
     "expo-status-bar": "~57.0.1",
     "maplibre-gl": "^6.6.0",

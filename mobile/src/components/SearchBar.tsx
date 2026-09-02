@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { searchPlaces } from '../utils/geocoding';
 import { toPersianDigits } from '../utils/persian';
 import { COLORS } from '../theme';
+import { hapticLight } from '../utils/haptics';
 import type { SearchResult } from '../types';
 
 type SearchBarProps = {
@@ -60,6 +61,7 @@ export default function SearchBar({ onSelect }: SearchBarProps) {
   }, []);
 
   const handleSelect = (result: SearchResult) => {
+    hapticLight();
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
     onSelect(lat, lng);
