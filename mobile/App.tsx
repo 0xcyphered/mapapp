@@ -7,8 +7,10 @@ import {
 } from '@expo-google-fonts/vazirmatn';
 import {
   Animated,
+  BackHandler,
   FlatList,
   I18nManager,
+  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -53,6 +55,35 @@ function AppRoot() {
   const mapRef = useRef<MapCanvasHandle | null>(null);
   const panelAnim = useRef(new Animated.Value(0)).current;
 
+  const panelWidth = 300;
+  const panelResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only capture horizontal drags, not vertical scrolls
+        return (
+          Math.abs(gestureState.dx) > 10 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Panel starts at 0 when open, should slide to -panelWidth when closed.
+        // Swipe left (negative dx) = dismiss.
+        const dx = gestureState.dx;
+        const newTranslate = Math.max(-panelWidth, Math.min(0, dx));
+        panelAnim.setValue(newTranslate / panelWidth + 1); // map [-panelWidth, 0] to [0, 1]
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If dragged more than 40% of panel width, close; otherwise snap back open
+        if (gestureState.dx < -panelWidth * 0.4) {
+          setPanelOpen(false);
+        } else {
+          setPanelOpen(true);
+        }
+      },
+    }),
+  ).current;
+
   // Vertical stacking: search bar is ~56px tall (padding 12+12 + input ~32) plus
   // top: insets.top + 8. Mode toggle sits just below it.
   const SEARCH_BOTTOM = insets.top + 68; // 8 (top offset) + ~60 (card height with border)
@@ -79,6 +110,16 @@ function AppRoot() {
       useNativeDriver: true,
     }).start();
   }, [panelOpen, panelAnim]);
+
+  // Android back button: dismiss panel if open
+  useEffect(() => {
+    if (!panelOpen) return;
+    const handler = BackHandler.addEventListener('hardwareBackPress', () => {
+      setPanelOpen(false);
+      return true; // consumed
+    });
+    return () => handler.remove();
+  }, [panelOpen]);
 
   const recalcSegments = useCallback(async (wps: Waypoint[]) => {
     if (wps.length < 2) {
@@ -265,8 +306,17 @@ function AppRoot() {
         </Pressable>
       </View>
 
+      {/* Panel backdrop — tap to dismiss */}
+      {panelOpen ? (
+        <Pressable
+          style={styles.panelBackdrop}
+          onPress={() => setPanelOpen(false)}
+        />
+      ) : null}
+
       {/* Control panel (slides from the left edge) */}
       <Animated.View
+        {...panelResponder.panHandlers}
         style={[
           styles.panel,
           {
@@ -274,7 +324,7 @@ function AppRoot() {
               {
                 translateX: panelAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [-320, 0],
+                  outputRange: [-panelWidth, 0],
                 }),
               },
             ],
@@ -506,6 +556,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     zIndex: 1200,
     elevation: 8,
+  },
+  panelBackdrop: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    zIndex: 1199, // just below the panel (1200)
   },
   panelHeader: {
     paddingBottom: 12,
