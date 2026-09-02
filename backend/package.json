@@ -1,0 +1,32 @@
+{
+  "name": "amintajeran-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AminTajeran transportation platform API",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --runInBand --forceExit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^8.0.0",
+    "mongoose": "^8.5.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.0.0",
+    "nodemon": "^3.1.7",
+    "supertest": "^6.3.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/test/__tests__/**/*.test.js"],
+    "globalSetup": "./test/globalSetup.js",
+    "globalTeardown": "./test/globalTeardown.js",
+    "testTimeout": 30000
+  }
+}
