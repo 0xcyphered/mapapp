@@ -21,6 +21,7 @@
 - **Depends on**: plans/010-backend-scaffold.md
 - **Category**: direction
 - **Planned at**: commit `39a89b4`, 2026-09-03 (010 scaffold present in the working tree on `advisor/010-backend-scaffold`)
+- **Executed at**: branch `advisor/011-phase1-mongo-models`, 2026-09-03
 
 ## Why this matters
 
