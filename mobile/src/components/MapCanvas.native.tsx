@@ -23,6 +23,7 @@ import { COLORS, TEHRAN } from '../theme';
 
 export type MapCanvasHandle = {
   flyTo: (lngLat: [number, number], zoom?: number) => void;
+  resetNorth: () => void;
 };
 
 type MapCanvasProps = {
@@ -58,6 +59,7 @@ function accuracyRadiusPx(accuracy: number, lat: number, zoom: number): number {
 const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
   ({ waypoints, segments, mode, position, onMapClick, onWaypointPress }, ref) => {
     const cameraRef = useRef<CameraRef | null>(null);
+    const centerRef = useRef<[number, number]>(TEHRAN);
     const [zoom, setZoom] = useState(12);
     const pulse = useRef(new Animated.Value(0)).current;
 
@@ -79,6 +81,13 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
           center: lngLat,
           zoom: zoomLevel,
           duration: 1500,
+        });
+      },
+      resetNorth: () => {
+        cameraRef.current?.easeTo({
+          center: centerRef.current,
+          bearing: 0,
+          duration: 300,
         });
       },
     }));
@@ -178,7 +187,10 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
       <Map
         mapStyle={OSM_STYLE}
         onPress={handleMapPress}
-        onRegionDidChange={(e) => setZoom(e.nativeEvent.zoom)}
+        onRegionDidChange={(e) => {
+          setZoom(e.nativeEvent.zoom);
+          centerRef.current = e.nativeEvent.center;
+        }}
         style={{ flex: 1 }}
       >
         <Camera

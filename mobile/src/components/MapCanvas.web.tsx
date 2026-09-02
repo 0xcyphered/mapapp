@@ -15,6 +15,7 @@ import { COLORS, TEHRAN } from '../theme';
 
 export type MapCanvasHandle = {
   flyTo: (lngLat: [number, number], zoom?: number) => void;
+  resetNorth: () => void;
 };
 
 type MapCanvasProps = {
@@ -107,6 +108,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
     useImperativeHandle(ref, () => ({
       flyTo: (lngLat: [number, number], zoomLevel = 15) => {
         mapRef.current?.flyTo({ center: lngLat, zoom: zoomLevel, duration: 1500 });
+      },
+      resetNorth: () => {
+        mapRef.current?.easeTo({ bearing: 0, duration: 300 });
       },
     }));
 

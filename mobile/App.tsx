@@ -204,6 +204,10 @@ function AppRoot() {
     }
   }, [position, request]);
 
+  const handleCompassPress = useCallback(() => {
+    mapRef.current?.resetNorth();
+  }, []);
+
   return (
     <View style={styles.container}>
       <MapCanvas
@@ -301,6 +305,9 @@ function AppRoot() {
             <Ionicons name="trash" size={22} color={COLORS.red} />
           </Pressable>
         ) : null}
+        <Pressable style={styles.fab} onPress={handleCompassPress}>
+          <Ionicons name="compass" size={22} color={COLORS.textDark} />
+        </Pressable>
         <Pressable style={styles.fab} onPress={handleGpsPress}>
           <Ionicons name="navigate" size={22} color={COLORS.blue} />
         </Pressable>
