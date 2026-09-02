@@ -107,6 +107,7 @@ This phase covers the essential customer, driver, and administrator workflows re
 ### 7. Core Integrations & APIs (ارتباط با سایر سامانه‌ها)
 *   **Map-based address selection and location picking**: Integrates base map APIs for visual origin and destination selection [21, 32].
 *   **Integrating map routing API for path calculation**: Integrates map routing APIs to calculate and plot transit paths for shipments [32].
+*   **Push notification provider integration**: Integrates a third-party push service for device-level notifications on Android/iOS [20, 32].
 
 ### 8. Phase 1 Delivery Surfaces (بسترهای تحویلی فاز ۱)
 *   **iOS Mobile Application Surface**: Delivers native or cross-platform iOS mobile client application [21].
@@ -224,3 +225,6 @@ These standards define the performance, reliability, accessibility, and security
 *   **Encrypted storage of sensitive authentication and payment info**: Explicitly sanitizes and encrypts passwords, bank details, and tokens in the database [33].
 *   **Security audit trail logging**: Chronicling and tracking of administrative and authentication events in separate logs [33].
 *   **Pre-release penetration testing**: Executing a certified pentest on the system before final deployment [33].
+*   **Logging and monitoring**: Operational event logging and health checks must be active across all services [31].
+*   **File / image storage**: Documents and images must live in an object store, not embedded in Mongo documents [31].
+*   **Modular APIs**: System must support adding new modules and external systems without a core rewrite [31].
