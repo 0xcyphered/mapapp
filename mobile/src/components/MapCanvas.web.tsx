@@ -23,6 +23,7 @@ type MapCanvasProps = {
   mode: MapMode;
   position: UserPosition | null;
   onMapClick: (lat: number, lng: number) => void;
+  onWaypointPress?: (id: string) => void;
 };
 
 /** The web app's exact OSM raster tiles — the same style object the native canvas uses. */
@@ -90,7 +91,7 @@ function createPulseElement(): HTMLElement {
 }
 
 const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
-  ({ waypoints, segments, mode, position, onMapClick }, ref) => {
+  ({ waypoints, segments, mode, position, onMapClick, onWaypointPress }, ref) => {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<MlMap | null>(null);
     const markersRef = useRef(new Map<string, Marker>());
@@ -100,6 +101,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
     // Latest props for the map's long-lived click handler (no re-bind needed).
     const clickProps = useRef({ mode, onMapClick });
     clickProps.current = { mode, onMapClick };
+    const waypointPressRef = useRef(onWaypointPress);
+    waypointPressRef.current = onWaypointPress;
 
     useImperativeHandle(ref, () => ({
       flyTo: (lngLat: [number, number], zoomLevel = 15) => {
@@ -261,6 +264,10 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
           })
             .setLngLat([wp.lng, wp.lat])
             .addTo(map);
+          marker.getElement().addEventListener('click', (e) => {
+            e.stopPropagation();
+            waypointPressRef.current?.(wp.id);
+          });
           markersRef.current.set(wp.id, marker);
         }
       }

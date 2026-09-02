@@ -31,6 +31,7 @@ type MapCanvasProps = {
   mode: MapMode;
   position: UserPosition | null;
   onMapClick: (lat: number, lng: number) => void;
+  onWaypointPress?: (id: string) => void;
 };
 
 /** The web app's exact OSM raster tiles, as an inline MapLibre style. */
@@ -55,7 +56,7 @@ function accuracyRadiusPx(accuracy: number, lat: number, zoom: number): number {
 }
 
 const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
-  ({ waypoints, segments, mode, position, onMapClick }, ref) => {
+  ({ waypoints, segments, mode, position, onMapClick, onWaypointPress }, ref) => {
     const cameraRef = useRef<CameraRef | null>(null);
     const [zoom, setZoom] = useState(12);
     const pulse = useRef(new Animated.Value(0)).current;
@@ -245,7 +246,12 @@ const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(
 
         {/* Waypoint markers */}
         {waypoints.map((wp) => (
-          <ViewAnnotation key={wp.id} id={wp.id} lngLat={[wp.lng, wp.lat]}>
+          <ViewAnnotation
+            key={wp.id}
+            id={wp.id}
+            lngLat={[wp.lng, wp.lat]}
+            onPress={() => onWaypointPress?.(wp.id)}
+          >
             <View style={styles.marker}>
               <Text style={styles.markerText}>{wp.label}</Text>
             </View>
