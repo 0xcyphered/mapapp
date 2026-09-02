@@ -121,6 +121,19 @@ function AppRoot() {
     setSegments([]);
   }, []);
 
+  const undoWaypoint = useCallback(() => {
+    if (waypoints.length === 0) return;
+    const lastId = waypoints[waypoints.length - 1].id;
+    removeWaypoint(lastId);
+  }, [waypoints, removeWaypoint]);
+
+  const handleWaypointPress = useCallback(
+    (id: string) => {
+      removeWaypoint(id);
+    },
+    [removeWaypoint]
+  );
+
   const handleMapClick = useCallback(
     (lat: number, lng: number) => {
       addWaypoint(lat, lng);
@@ -159,6 +172,7 @@ function AppRoot() {
         mode={mode}
         position={position}
         onMapClick={handleMapClick}
+        onWaypointPress={handleWaypointPress}
       />
 
       {/* Search overlay */}
@@ -229,13 +243,18 @@ function AppRoot() {
       {mode === 'measure' && waypoints.length === 0 ? (
         <View style={[styles.measureHint, { bottom: CARD_BOTTOM }]}>
           <Text style={styles.measureHintText}>
-            روی نقشه کلیک کنید تا نقطه اضافه شود
+            روی نقشه کلیک کنید • روی نقطه بزنید تا حذف شود
           </Text>
         </View>
       ) : null}
 
       {/* FABs */}
       <View style={[styles.fabs, { bottom: insets.bottom + 24 }]}>
+        {mode === 'measure' && waypoints.length > 0 ? (
+          <Pressable style={styles.fab} onPress={undoWaypoint}>
+            <Ionicons name="arrow-undo" size={20} color={COLORS.textMid} />
+          </Pressable>
+        ) : null}
         {waypoints.length > 0 ? (
           <Pressable style={styles.fab} onPress={clearWaypoints}>
             <Ionicons name="trash" size={22} color={COLORS.red} />
