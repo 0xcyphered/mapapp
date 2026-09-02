@@ -38,6 +38,7 @@ describe('cargo shipment models', () => {
       specialCharacteristics: ['refrigerated'],
     });
     expect(cargo.status).toBe('draft');
+    expect(cargo.transportMode).toBe('land');
     expect(cargo.origin.location.type).toBe('Point');
     expect(cargo.origin.location.coordinates[0]).toBe(51.389);
     expect(cargo.origin.location.coordinates[1]).toBe(35.689);
@@ -150,6 +151,57 @@ describe('cargo shipment models', () => {
         driverUserId: driver._id,
         vehicleId: vehicle._id,
         status: 'Started',
+      })
+    ).rejects.toThrow();
+  });
+
+  it('defaults transportMode to land and accepts the five V6 modes', async () => {
+    const { owner } = await seedParties();
+    const defaults = await Cargo.create({
+      ownerUserId: owner._id,
+      origin: tehran,
+      destination: esfahan,
+    });
+    expect(defaults.transportMode).toBe('land');
+    expect(Cargo.TRANSPORT_MODES).toEqual(['land', 'sea', 'air', 'rail', 'multimodal']);
+
+    const sea = await Cargo.create({
+      ownerUserId: owner._id,
+      origin: tehran,
+      destination: esfahan,
+      transportMode: 'sea',
+    });
+    expect(sea.transportMode).toBe('sea');
+  });
+
+  it('rejects an unknown transportMode', async () => {
+    const { owner } = await seedParties();
+    await expect(
+      Cargo.create({
+        ownerUserId: owner._id,
+        origin: tehran,
+        destination: esfahan,
+        transportMode: 'road',
+      })
+    ).rejects.toThrow();
+  });
+
+  it('rejects Persian or combined aliases as transportMode', async () => {
+    const { owner } = await seedParties();
+    await expect(
+      Cargo.create({
+        ownerUserId: owner._id,
+        origin: tehran,
+        destination: esfahan,
+        transportMode: 'زمینی',
+      })
+    ).rejects.toThrow();
+    await expect(
+      Cargo.create({
+        ownerUserId: owner._id,
+        origin: tehran,
+        destination: esfahan,
+        transportMode: 'combined',
       })
     ).rejects.toThrow();
   });
