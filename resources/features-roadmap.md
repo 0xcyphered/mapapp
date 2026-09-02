@@ -1,15 +1,21 @@
 # Baryar Transportation & Logistics Platform - Feature Implementation Roadmap (V6)
 
-This document contains a comprehensive, granular list of all features specified in the RFP for the **Baryar (Taticom Ecosystem) Transportation and Logistics Platform** [1]. 
+Canonical product feature list for **Baryar (Taticom Ecosystem)**
+freight and logistics. Source of truth for *what* to build:
+`resources/RFP.pdf` (16 pages, published 10 Shahrivar 1405). This file is
+the implementation checklist derived from that RFP. Contractor process
+(SOW, bidding, contracts, NDA) stays in the PDF and is not duplicated here.
 
-To address implementation overhead, the features have been re-prioritized across several iterations. Heavily involved subsystems—such as **ratings and social feedback loops**, **in-app notification inboxes**, **dynamic admin permission grids**, **mass marketing broadcast interfaces**, **automated user KYC/identity verification**, and **payment and SMS gateways**—have been deferred from V1 (MVP) to Phase 2 (Final Phase) [24]. This provides an exceptionally lean, rapid-to-develop core for Phase 1.
+Phase 1 is the booking MVP (cargo owner + driver + admin oversight).
+Phase 2 stays parked until Phase 1 booking works: live GPS, companies/fleet,
+ratings, payments, KYC APIs, Telegram/WhatsApp, SMS gateway, BI.
 
 Each row mentions exactly **one single feature** without combining multiple functionalities to provide absolute clarity for development [14, 15].
 
 ---
 
 ## Phase 1: Core Platform (v1 - MVP)
-This phase covers the essential customer, driver, and administrator workflows required to book, transport, pay, and track cargo end-to-end [8, 11]. It establishes the core iOS/Android apps, scalable backend APIs, and the primary admin web panel [21, 22].
+This phase covers the essential customer, driver, and administrator workflows required to book, transport, and track cargo end-to-end (RFP 4.2, 4.3). It establishes the core iOS/Android apps, scalable backend APIs, and the primary admin web panel (RFP 4.3).
 
 ### 1. User Application Features (اپلیکیشن کاربری)
 *   **User registration**: Allows new users to register on the platform [14].
@@ -118,7 +124,7 @@ This phase covers the essential customer, driver, and administrator workflows re
 ---
 
 ## Phase 2: Final Phase (Advanced & Corporate)
-This phase introduces multi-tier corporate shipping workflows (Section 4.2.4), real-time background GPS tracking, advanced analytics dashboards, social automation integrations, and deferred gateway, trust, and verification systems [16, 17, 21].
+This phase introduces multi-tier corporate shipping workflows (RFP 4.2.4), real-time background GPS tracking, advanced analytics dashboards, social automation integrations, and deferred gateway, trust, and verification systems (RFP 4.2.3, 4.2.6, 4.2.8).
 
 ### 1. Advanced Tracking & GPS Features
 *   **Online vehicle GPS tracking**: Allows cargo owners to view live vehicle positions on maps [16].
