@@ -102,10 +102,6 @@ routeGeometry: [number, number][];
 Store every point as GeoJSON `Point` with `coordinates: [lng, lat]`. Tehran
 smoke values in tests: `[51.389, 35.689]`.
 
-**Mongoose conventions to match** (operator production models at
-`$HOME/projects/v5/backend/src/models/Persona.js` and
-`DeletionRequest.js` — copy *shape only*, not Twitter fields):
-
 - CommonJS `require('mongoose')`
 - `new mongoose.Schema({ ... }, { timestamps: true })` when there is no
   domain field named `createdAt` / `updatedAt`

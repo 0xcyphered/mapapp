@@ -37,12 +37,6 @@ with a health check and a Jest baseline. It does **not** implement login,
 users, cargo, or any mobile/webapp wiring. Those are later plans that hang
 off this scaffold.
 
-Operator backend convention (do not invent a new stack): CommonJS Express +
-Mongoose + Jest, same family as the operator's production XScheduler backend
-at `$HOME/projects/v5/backend`. Copy **bootstrap patterns only** (connectDB,
-health ping, Jest memory Mongo). Do **not** copy XScheduler routes, Firebase
-auth, billing, Redis, BullMQ, or workers.
-
 ## Current state
 
 Repo layout at `74e575f`:
@@ -120,13 +114,6 @@ If `/opt/homebrew/bin/mongod` is missing, STOP and report — do not download a
 system MongoDB as part of this plan. Tests can wait; do not skip the test
 step by deleting it.
 
-## Suggested executor toolkit
-
-- Match Express bootstrap to `$HOME/projects/v5/backend/src/config/db.js` and
-  the `/health` handler in `$HOME/projects/v5/backend/src/index.js` (health
-  ping only — not the Redis branch, not the rest of that file).
-- Do **not** copy `$HOME/projects/v5/backend/src/index.js` wholesale.
-
 ## Scope
 
 **In scope** (the only files you should create or modify):
@@ -158,7 +145,6 @@ step by deleting it.
   operator's production Express apps).
 - Proxying Nominatim or OSRM.
 - Changing the map UI, RTL, or Expo config.
-- Copying files out of `$HOME/projects/v5` into this repo.
 
 ## Git workflow
 
@@ -294,9 +280,6 @@ show it).
 
 ### Step 5: Database helper
 
-Create `backend/src/config/db.js`. Pattern is the slim version of
-`$HOME/projects/v5/backend/src/config/db.js` **without** the XScheduler
-logger (this scaffold has no logger module):
 
 ```js
 const mongoose = require('mongoose');
